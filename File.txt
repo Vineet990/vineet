@@ -1,0 +1,59 @@
+from rest_framework import serializers
+from .models import UserForm
+
+class UserFormSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserForm
+        fields = ['name', 'dob', 'email', 'phone']
+from django.db import models
+
+class UserForm(models.Model):
+    name = models.CharField(max_length=100)
+    dob = models.DateField()
+    email = models.EmailField()
+    phone = models.CharField(max_length=15)
+from rest_framework import generics
+from .serializers import UserFormSerializer
+from .models import UserForm
+
+class UserFormView(generics.CreateAPIView):
+    serializer_class = UserFormSerializer
+
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        # code to send email to the form submitter
+        return instance
+from django.urls import path
+from app_name.views import UserFormView
+
+urlpatterns = [
+    path('user-form/', UserFormView.as_view(), name='user-form'),
+]
+class UserFormSerializer(serializers.ModelSerializer):
+    phone = serializers.CharField(validators=[phone_number_validator])
+
+    class Meta:
+        model = UserForm
+        fields = ['name', 'dob', 'email', 'phone']
+from rest_framework import serializers, status
+from rest_framework.response import Response
+
+class UserFormView(generics.CreateAPIView):
+    serializer_class = UserFormSerializer
+
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        # code to send email to the form submitter
+        return instance
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        name = serializer.validated_data['name']
+        if not name.isalpha():
+            return Response({'error': 'Invalid name'}, status=status.HTTP_400_BAD_REQUEST)
+
+        email = serializer.validated_data['email']
+        if not email.endswith('@example.com'):
+            return Response({'error': '
